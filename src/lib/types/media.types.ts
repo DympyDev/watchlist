@@ -1,3 +1,11 @@
+export interface MediaCollection {
+  key: string;  // e.g., 'mcu', 'star-wars'
+  name: string; // e.g., 'Marvel Cinematic Universe', 'Star Wars Saga'
+  description: string;
+  coverImage: string;
+  sections: MediaSection[];
+}
+
 export interface MediaSection {
   name: string;
   media: MediaItem[];
