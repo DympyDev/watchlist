@@ -1,10 +1,13 @@
 <script lang="ts">
-	import { MCU_PHASES } from '$lib/constants/mcu.constants';
 	import { writable } from 'svelte/store';
 	import { onMount } from 'svelte';
+	import type { PageData } from './$types';
+
+	export let data: PageData;
 
 	// Create a store for watched items with localStorage persistence
-	const STORAGE_KEY = 'mcu-watched-items';
+	const STORAGE_KEY = `${data.universe.toLowerCase()}-watched-items`;
+	const isLoading = writable(true);
 
 	function loadWatchedItems(): Set<string> {
 		if (typeof window === 'undefined') return new Set();
@@ -32,6 +35,11 @@
 
 		window.addEventListener('scroll', handleScroll);
 		handleScroll();
+
+		// Set loading to false after a small delay to ensure smooth transition
+		setTimeout(() => {
+			isLoading.set(false);
+		}, 500);
 
 		return () => {
 			unsubscribe();
@@ -79,15 +87,26 @@
 </script>
 
 <svelte:head>
-	<title>MCU Watchlist</title>
-	<meta name="description" content="Track your progress through the Marvel Cinematic Universe with this interactive watchlist." />
+	<title>{data.universe} Watchlist</title>
+	<meta name="description" content="Track your progress through the {data.universe} with this interactive watchlist." />
 </svelte:head>
+
+{#if $isLoading}
+	<div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm">
+		<div class="rounded-lg bg-white p-8 shadow-xl">
+			<div class="flex items-center space-x-4">
+				<div class="h-8 w-8 animate-spin rounded-full border-4 border-yellow-600 border-t-transparent"></div>
+				<p class="text-lg font-medium text-gray-900">Loading {data.universe} watchlist...</p>
+			</div>
+		</div>
+	</div>
+{/if}
 
 <div class="space-y-12">
 	<div class="text-center">
-		<h1 class="mb-4 text-4xl font-bold text-gray-900">Marvel Cinematic Universe Watchlist</h1>
+		<h1 class="mb-4 text-4xl font-bold text-gray-900">{data.universe} Watchlist</h1>
 		<p class="mx-auto max-w-2xl text-lg text-gray-600">
-			Track your progress through the Marvel Cinematic Universe with this interactive watchlist.
+			Track your progress through the {data.universe} with this interactive watchlist.
 			Check off items as you watch them!
 		</p>
 		<div class="mt-4 space-x-4">
@@ -106,7 +125,7 @@
 		</div>
 	</div>
 
-	{#each MCU_PHASES as phase}
+	{#each data.phases as phase}
 		<div class="space-y-4">
 			<div class="p-4 text-center">
 				<h2 class="text-2xl font-bold">{phase.name}</h2>
@@ -180,9 +199,9 @@
 
 <footer class="mt-12 border-t border-gray-200 py-8 text-center text-sm text-gray-600">
 	<p class="mx-auto max-w-3xl px-4">
-		This is a fan-made website for personal use only. All Marvel-related content, including images and names, 
-		are property of Marvel Entertainment, LLC and The Walt Disney Company. This site is not affiliated with, 
-		endorsed, sponsored, or specifically approved by Marvel or Disney.
+		This is a fan-made website for personal use only. All {data.universe} content, including images and names, 
+		are property of their respective owners. This site is not affiliated with, endorsed, sponsored, 
+		or specifically approved by any rights holders.
 	</p>
 </footer>
 
@@ -207,4 +226,4 @@
 			/>
 		</svg>
 	</button>
-{/if}
+{/if} 
