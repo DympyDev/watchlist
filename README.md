@@ -1,38 +1,69 @@
-# sv
+# Marvel MCU Watch Tracker
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A modern web application to track your progress through the Marvel Cinematic Universe in chronological order, presented in a unique comic book style layout.
 
-## Creating a project
+## Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+- **Google Authentication**: Secure login with your Google account
+- **Progress Syncing**: Your watch progress is automatically saved and synced using Firebase
+- **Comic Book Style UI**: Movies and series are presented as comic book pages with different layouts
+- **Chronological Order**: Content is arranged in the MCU's in-universe chronological order
+- **Chapter Organization**: Content is organized into distinct MCU phases/chapters
+- **Responsive Design**: Various comic panel sizes (full-width, 1/3, 2/3, and 1/2) for optimal viewing
+- **Single Page Application**: Smooth, seamless user experience
 
+## Technical Stack
+
+- **Frontend**: SvelteKit
+- **Authentication**: Firebase Authentication
+- **Database**: Firebase Firestore
+- **Styling**: Tailwind
+- **Type Safety**: TypeScript for enhanced development experience
+
+## Development
+
+1. Install dependencies:
 ```bash
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
+npm install
 ```
 
-## Developing
+2. Set up Firebase:
+   - Create a Firebase project
+   - Enable Google Authentication
+   - Set up Firestore database
+   - Add your Firebase configuration
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
+3. Start the development server:
 ```bash
 npm run dev
+```
 
-# or start the server and open the app in a new browser tab
+Or open it in a new browser tab:
+```bash
 npm run dev -- --open
 ```
 
 ## Building
 
-To create a production version of your app:
+Create a production version of the app:
 
 ```bash
 npm run build
 ```
 
-You can preview the production build with `npm run preview`.
+Preview the production build:
+```bash
+npm run preview
+```
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+## Project Structure
+
+- `src/lib/constants`: MCU content data and type definitions
+- `src/lib/components`: Reusable UI components
+- `src/lib/firebase`: Firebase configuration and utilities
+- `src/lib/stores`: State management for authentication and watch progress
+- `src/routes`: Page components and layouts
+
+## Contributing
+
+Feel free to submit issues and enhancement requests!
