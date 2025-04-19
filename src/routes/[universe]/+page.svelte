@@ -340,11 +340,10 @@
 									{#if isWatched(item)}
 										<div class="absolute inset-0 flex items-center justify-center">
 											<div
-												class={`transform font-black text-yellow-400 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]
-												${item.comicSize === 'third' ? 'text-4xl' : ''}
-												${item.comicSize === 'half' ? 'text-5xl' : ''}
-												${item.comicSize === 'two-thirds' ? 'text-6xl' : ''}
-												${!item.comicSize || item.comicSize === 'full' ? 'text-8xl' : ''}`}
+												class={`transform text-4xl font-black text-yellow-400 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]
+												${item.comicSize === 'half' ? 'md:text-5xl' : ''}
+												${item.comicSize === 'two-thirds' ? 'md:text-6xl' : ''}
+												${!item.comicSize || item.comicSize === 'full' ? 'md:text-8xl' : ''}`}
 												style="transform: rotate({getRandomRotation()}deg)"
 											>
 												WATCHED!

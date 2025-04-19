@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store';
 import { auth, db } from '$lib/firebase/firebase.config';
 import { GoogleAuthProvider, signInWithPopup, signOut, type User } from 'firebase/auth';
-import { doc, getDoc, runTransaction } from 'firebase/firestore';
+import { doc, getDoc, setDoc, runTransaction } from 'firebase/firestore';
 
 export const user = writable<User | null>(null);
 export const isAuthenticated = writable(false);
@@ -13,10 +13,9 @@ auth.onAuthStateChanged((userData) => {
 });
 
 export async function signInWithGoogle() {
+    const provider = new GoogleAuthProvider();
     try {
-        const provider = new GoogleAuthProvider();
-        const result = await signInWithPopup(auth, provider);
-        return result.user;
+        await signInWithPopup(auth, provider);
     } catch (error) {
         console.error('Error signing in with Google:', error);
         throw error;
@@ -33,22 +32,52 @@ export async function signOutUser() {
 }
 
 export async function saveWatchedItems(userId: string, universe: string, watchedItems: string[]) {
-    try {
-        const userDocRef = doc(db, 'users', userId);
-        
-        await runTransaction(db, async (transaction) => {
-            const userDoc = await transaction.get(userDocRef);
-            const currentData = userDoc.exists() ? userDoc.data() : {};
+    const MAX_RETRIES = 3;
+    let retryCount = 0;
+
+    while (retryCount < MAX_RETRIES) {
+        try {
+            const userDocRef = doc(db, 'users', userId);
             
-            // Only update the specific universe's watched items
-            transaction.set(userDocRef, {
-                ...currentData,
-                [`${universe}_watched`]: watchedItems
+            // First check if the document exists
+            const docSnap = await getDoc(userDocRef);
+            
+            if (!docSnap.exists()) {
+                // If document doesn't exist, create it with initial data
+                await setDoc(userDocRef, {
+                    [`${universe}_watched`]: watchedItems
+                });
+                return;
+            }
+
+            // If document exists, use transaction for atomic update
+            await runTransaction(db, async (transaction) => {
+                const userDoc = await transaction.get(userDocRef);
+                if (!userDoc.exists()) {
+                    throw new Error('Document does not exist!');
+                }
+                
+                // Only update the specific universe's watched items
+                transaction.update(userDocRef, {
+                    [`${universe}_watched`]: watchedItems
+                });
             });
-        });
-    } catch (error) {
-        console.error('Error saving watched items:', error);
-        throw error;
+            
+            // If we get here, the operation was successful
+            return;
+            
+        } catch (error) {
+            retryCount++;
+            
+            // If we've exhausted all retries, throw the error
+            if (retryCount === MAX_RETRIES) {
+                console.error('Error saving watched items after max retries:', error);
+                throw error;
+            }
+            
+            // Wait a bit before retrying (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 100));
+        }
     }
 }
 
