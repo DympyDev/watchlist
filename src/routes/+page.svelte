@@ -10,12 +10,12 @@
 	/>
 </svelte:head>
 
-<div class="relative min-h-[70vh] overflow-hidden bg-gradient-to-b from-purple-50 to-white">
+<div class="relative min-h-[50vh] md:min-h-[70vh] overflow-hidden bg-gradient-to-b from-purple-50 to-white">
 	<div
 		class="absolute inset-0 opacity-[0.15]"
 		style="background-image: url(&quot;data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E&quot;);"
 	></div>
-	<div class="relative flex min-h-[70vh] items-center justify-center px-4 sm:px-6 lg:px-8">
+	<div class="relative flex min-h-[50vh] md:min-h-[70vh] items-center justify-center px-4 sm:px-6 lg:px-8">
 		<div class="mx-auto max-w-2xl text-center">
 			<h1 class="mb-8 text-4xl font-extrabold sm:text-5xl">
 				<span class="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
