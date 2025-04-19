@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store';
 import { auth, db } from '$lib/firebase/firebase.config';
 import { GoogleAuthProvider, signInWithPopup, signOut, type User } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, runTransaction } from 'firebase/firestore';
 
 export const user = writable<User | null>(null);
 export const isAuthenticated = writable(false);
@@ -34,10 +34,18 @@ export async function signOutUser() {
 
 export async function saveWatchedItems(userId: string, universe: string, watchedItems: string[]) {
     try {
-        const userDoc = doc(db, 'users', userId);
-        await setDoc(userDoc, {
-            [`${universe}_watched`]: watchedItems
-        }, { merge: true });
+        const userDocRef = doc(db, 'users', userId);
+        
+        await runTransaction(db, async (transaction) => {
+            const userDoc = await transaction.get(userDocRef);
+            const currentData = userDoc.exists() ? userDoc.data() : {};
+            
+            // Only update the specific universe's watched items
+            transaction.set(userDocRef, {
+                ...currentData,
+                [`${universe}_watched`]: watchedItems
+            });
+        });
     } catch (error) {
         console.error('Error saving watched items:', error);
         throw error;

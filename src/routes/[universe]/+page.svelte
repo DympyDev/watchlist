@@ -4,9 +4,6 @@
 	import type { PageData } from './$types';
 	import {
 		user,
-		isAuthenticated,
-		signInWithGoogle,
-		signOutUser,
 		saveWatchedItems,
 		loadWatchedItems
 	} from '$lib/stores/auth.store';
@@ -20,6 +17,7 @@
 	const hasConflicts = writable(false);
 	const conflictItems = writable<string[]>([]);
 	const lastKnownUserId = writable<string | null>(null);
+	const lastKnownUniverse = writable<string | null>(null);
 
 	function loadLocalWatchedItems(): Set<string> {
 		if (typeof window === 'undefined') return new Set();
@@ -33,9 +31,6 @@
 	async function handleInitialSync() {
 		if (!$user?.uid) return;
 
-		// If we've already synced for this user, don't sync again
-		if ($lastKnownUserId === $user.uid) return;
-
 		try {
 			isSyncing.set(true);
 			const localItems = Array.from($watchedItems);
@@ -44,16 +39,41 @@
 			// Check for conflicts (items in local but not in cloud)
 			const itemsOnlyInLocal = localItems.filter((item) => !cloudItems.includes(item));
 
+			// Verify that local items actually belong to this universe
+			const validLocalItems = localItems.filter(itemId => 
+				data.sections.some(section => 
+					section.media.some(item => item.id === itemId)
+				)
+			);
+
 			if (itemsOnlyInLocal.length > 0) {
-				conflictItems.set(itemsOnlyInLocal);
-				hasConflicts.set(true);
+				// Only show conflicts for valid items from this universe
+				const validConflicts = itemsOnlyInLocal.filter(itemId =>
+					data.sections.some(section =>
+						section.media.some(item => item.id === itemId)
+					)
+				);
+				
+				if (validConflicts.length > 0) {
+					conflictItems.set(validConflicts);
+					hasConflicts.set(true);
+				} else {
+					// No valid conflicts, just use cloud items
+					watchedItems.set(new Set(cloudItems));
+				}
 			} else {
-				// No conflicts, merge items
-				const mergedItems = new Set([...localItems, ...cloudItems]);
-				watchedItems.set(mergedItems);
-				await saveWatchedItems($user.uid, data.key, Array.from(mergedItems));
+				// No conflicts, but still ensure we only include valid items
+				const validCloudItems = cloudItems.filter(itemId =>
+					data.sections.some(section =>
+						section.media.some(item => item.id === itemId)
+					)
+				);
+				watchedItems.set(new Set(validCloudItems));
 			}
+			
+			// Update both user and universe tracking
 			lastKnownUserId.set($user.uid);
+			lastKnownUniverse.set(data.key);
 		} catch (error) {
 			console.error('Error during initial sync:', error);
 		} finally {
@@ -61,8 +81,8 @@
 		}
 	}
 
-	// Watch for user changes
-	$: if ($user?.uid !== $lastKnownUserId) {
+	// Watch for user changes or universe changes
+	$: if ($user?.uid !== $lastKnownUserId || data.key !== $lastKnownUniverse) {
 		handleInitialSync();
 	}
 
@@ -74,11 +94,24 @@
 			const localItems = Array.from($watchedItems);
 			const cloudItems = await loadWatchedItems($user.uid, data.key);
 
+			// Filter items to only include those from this universe
+			const validLocalItems = localItems.filter(itemId =>
+				data.sections.some(section =>
+					section.media.some(item => item.id === itemId)
+				)
+			);
+			
+			const validCloudItems = cloudItems.filter(itemId =>
+				data.sections.some(section =>
+					section.media.some(item => item.id === itemId)
+				)
+			);
+
 			let finalItems;
 			if (useLocal) {
-				finalItems = new Set(localItems);
+				finalItems = new Set(validLocalItems);
 			} else {
-				finalItems = new Set(cloudItems);
+				finalItems = new Set(validCloudItems);
 			}
 
 			watchedItems.set(finalItems);
@@ -156,6 +189,12 @@
 	function resetProgress() {
 		if (confirm('Are you sure you want to reset all watch progress? This cannot be undone.')) {
 			watchedItems.set(new Set());
+			if ($user?.uid) {
+				// Explicitly save empty array to cloud
+				saveWatchedItems($user.uid, data.key, []).catch(error => {
+					console.error('Error clearing cloud progress:', error);
+				});
+			}
 		}
 	}
 
