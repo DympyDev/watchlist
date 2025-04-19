@@ -89,7 +89,7 @@
 
 			<div class="prose prose-lg mx-auto mb-16">
 				<p class="mb-6 text-gray-600">
-					Hey there! I'm Dymion Fritz, CTO at <a
+					Hey there! I'm Dymion Fritz, CTO and Software Engineer at <a
 						href="https://softwarebastards.nl/"
 						target="_blank"
 						rel="noopener noreferrer"

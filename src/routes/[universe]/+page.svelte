@@ -2,7 +2,14 @@
 	import { writable } from 'svelte/store';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
-	import { user, isAuthenticated, signInWithGoogle, signOutUser, saveWatchedItems, loadWatchedItems } from '$lib/stores/auth.store';
+	import {
+		user,
+		isAuthenticated,
+		signInWithGoogle,
+		signOutUser,
+		saveWatchedItems,
+		loadWatchedItems
+	} from '$lib/stores/auth.store';
 
 	export let data: PageData;
 
@@ -25,7 +32,7 @@
 
 	async function handleInitialSync() {
 		if (!$user?.uid) return;
-		
+
 		// If we've already synced for this user, don't sync again
 		if ($lastKnownUserId === $user.uid) return;
 
@@ -33,10 +40,10 @@
 			isSyncing.set(true);
 			const localItems = Array.from($watchedItems);
 			const cloudItems = await loadWatchedItems($user.uid, data.key);
-			
+
 			// Check for conflicts (items in local but not in cloud)
-			const itemsOnlyInLocal = localItems.filter(item => !cloudItems.includes(item));
-			
+			const itemsOnlyInLocal = localItems.filter((item) => !cloudItems.includes(item));
+
 			if (itemsOnlyInLocal.length > 0) {
 				conflictItems.set(itemsOnlyInLocal);
 				hasConflicts.set(true);
@@ -61,19 +68,19 @@
 
 	async function resolveConflicts(useLocal: boolean) {
 		if (!$user?.uid) return;
-		
+
 		try {
 			isSyncing.set(true);
 			const localItems = Array.from($watchedItems);
 			const cloudItems = await loadWatchedItems($user.uid, data.key);
-			
+
 			let finalItems;
 			if (useLocal) {
 				finalItems = new Set(localItems);
 			} else {
 				finalItems = new Set(cloudItems);
 			}
-			
+
 			watchedItems.set(finalItems);
 			await saveWatchedItems($user.uid, data.key, Array.from(finalItems));
 			hasConflicts.set(false);
@@ -87,12 +94,12 @@
 
 	onMount(() => {
 		watchedItems.set(loadLocalWatchedItems());
-		
+
 		// Subscribe to changes and update localStorage and cloud
 		const unsubscribeWatchedItems = watchedItems.subscribe(async (items) => {
 			if (typeof window !== 'undefined') {
 				localStorage.setItem(STORAGE_KEY, JSON.stringify([...items]));
-				
+
 				// Only sync with cloud if there are no pending conflicts
 				if ($user?.uid && !$hasConflicts) {
 					try {
@@ -166,14 +173,19 @@
 
 <svelte:head>
 	<title>{data.name} Watchlist</title>
-	<meta name="description" content="Track your progress through the {data.name} with this interactive watchlist." />
+	<meta
+		name="description"
+		content="Track your progress through the {data.name} with this interactive watchlist."
+	/>
 </svelte:head>
 
 {#if $isLoading}
 	<div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm">
 		<div class="rounded-lg bg-white p-8 shadow-xl">
 			<div class="flex items-center space-x-4">
-				<div class="h-8 w-8 animate-spin rounded-full border-4 border-yellow-600 border-t-transparent"></div>
+				<div
+					class="h-8 w-8 animate-spin rounded-full border-4 border-yellow-600 border-t-transparent"
+				></div>
 				<p class="text-lg font-medium text-gray-900">Loading {data.name} watchlist...</p>
 			</div>
 		</div>
@@ -182,13 +194,13 @@
 
 {#if $hasConflicts}
 	<div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm">
-		<div class="rounded-lg bg-white p-8 shadow-xl max-w-lg w-full">
-			<h3 class="text-xl font-bold mb-4">Sync Conflict Detected</h3>
-			<p class="text-gray-600 mb-4">
-				There are {$conflictItems.length} items in your local storage that are not in the cloud storage. 
+		<div class="w-full max-w-lg rounded-lg bg-white p-8 shadow-xl">
+			<h3 class="mb-4 text-xl font-bold">Sync Conflict Detected</h3>
+			<p class="mb-4 text-gray-600">
+				There are {$conflictItems.length} items in your local storage that are not in the cloud storage.
 				How would you like to proceed?
 			</p>
-			<div class="space-y-2 mb-4">
+			<div class="mb-4 space-y-2">
 				<p class="font-medium">Conflicting items:</p>
 				<ul class="list-disc pl-5 text-sm text-gray-600">
 					{#each $conflictItems as item}
@@ -205,7 +217,7 @@
 				</button>
 				<button
 					on:click={() => resolveConflicts(true)}
-					class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
+					class="rounded-lg bg-yellow-600 px-4 py-2 text-white hover:bg-yellow-700"
 				>
 					Keep Local Changes
 				</button>
@@ -219,23 +231,27 @@
 		class="absolute inset-0 opacity-[0.15]"
 		style="background-image: url(&quot;data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E&quot;);"
 	></div>
-	<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 relative">
+	<div class="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 		<div class="space-y-12">
 			<div class="text-center">
-				<h1 class="mb-4 text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">{data.name} Watchlist</h1>
+				<h1
+					class="mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-4xl font-bold text-transparent"
+				>
+					{data.name} Watchlist
+				</h1>
 				<p class="mx-auto max-w-2xl text-lg text-gray-600">
 					{data.description}
 				</p>
 				<div class="mt-4 space-x-4">
 					<button
 						on:click={scrollToNextUnwatched}
-						class="rounded-lg bg-yellow-600 px-4 py-2 font-medium text-white transition-colors hover:bg-yellow-700 cursor-pointer"
+						class="cursor-pointer rounded-lg bg-yellow-600 px-4 py-2 font-medium text-white transition-colors hover:bg-yellow-700"
 					>
 						<span>Next Unwatched</span>
 					</button>
 					<button
 						on:click={resetProgress}
-						class="rounded-lg bg-red-600 px-4 py-2 font-medium text-white transition-colors hover:bg-red-700 cursor-pointer"
+						class="cursor-pointer rounded-lg bg-red-600 px-4 py-2 font-medium text-white transition-colors hover:bg-red-700"
 					>
 						Reset Progress
 					</button>
@@ -245,10 +261,16 @@
 			{#each data.sections as section}
 				<div class="space-y-4">
 					<div class="p-4 text-center">
-						<h2 class="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-500 bg-clip-text text-transparent">{section.name}</h2>
+						<h2
+							class="bg-gradient-to-r from-yellow-600 to-yellow-500 bg-clip-text text-2xl font-bold text-transparent"
+						>
+							{section.name}
+						</h2>
 					</div>
 
-					<div class="grid grid-cols-1 gap-4 rounded-lg bg-white p-4 shadow-lg md:grid-cols-6 md:p-12">
+					<div
+						class="grid grid-cols-1 gap-4 rounded-lg bg-white p-4 shadow-lg md:grid-cols-6 md:p-12"
+					>
 						{#each section.media as item}
 							<div
 								data-unwatched={!isWatched(item)}
@@ -319,7 +341,7 @@
 {#if $showBackToTop}
 	<button
 		on:click={scrollToTop}
-		class="fixed right-8 bottom-8 z-50 transform rounded-full bg-gray-800 p-3 text-white shadow-lg transition-all hover:scale-110 hover:bg-gray-700 cursor-pointer"
+		class="fixed right-8 bottom-8 z-50 transform cursor-pointer rounded-full bg-gray-800 p-3 text-white shadow-lg transition-all hover:scale-110 hover:bg-gray-700"
 		aria-label="Scroll to top"
 	>
 		<svg
@@ -337,4 +359,4 @@
 			/>
 		</svg>
 	</button>
-{/if} 
+{/if}
