@@ -8,7 +8,7 @@ const initialCollections: MediaCollection[] = [
         key: 'mcu',
         name: 'Marvel Cinematic Universe',
         description: 'Follow the epic saga of the Marvel Cinematic Universe from Iron Man to the latest releases. Track your progress through all the movies and Disney+ shows.',
-        coverImage: '/images/collections/mcu-cover.jpg', // You'll need to add this image
+        coverImage: '/images/mcu/banner.webp',
         sections: MCU_PHASES
     }
     // Add more collections here as they become available
