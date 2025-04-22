@@ -5,7 +5,7 @@
 	import {
 		user,
 		saveWatchedItems,
-		loadWatchedItems
+		loadWatchedItems,
 	} from '$lib/stores/auth.store';
 
 	export let data: PageData;
@@ -18,6 +18,7 @@
 	const conflictItems = writable<string[]>([]);
 	const lastKnownUserId = writable<string | null>(null);
 	const lastKnownUniverse = writable<string | null>(null);
+	const showShareTooltip = writable(false);
 
 	function loadLocalWatchedItems(): Set<string> {
 		if (typeof window === 'undefined') return new Set();
@@ -28,11 +29,27 @@
 	const watchedItems = writable<Set<string>>(new Set());
 	const showBackToTop = writable(false);
 
+	function getShareUrl() {
+		if (!$user?.uid) return null;
+		const baseUrl = window.location.origin;
+		return `${baseUrl}/${data.key}/share/${$user.uid}`;
+	}
+
+	async function copyShareUrl() {
+		const url = getShareUrl();
+		if (url) {
+			await navigator.clipboard.writeText(url);
+			showShareTooltip.set(true);
+			setTimeout(() => showShareTooltip.set(false), 2000);
+		}
+	}
+
 	async function handleInitialSync() {
 		if (!$user?.uid) return;
 
 		try {
 			isSyncing.set(true);
+
 			const localItems = Array.from($watchedItems);
 			const cloudItems = await loadWatchedItems($user.uid, data.key);
 
@@ -315,6 +332,19 @@
 					>
 						Reset Progress
 					</button>
+					{#if $user}
+						<button
+							on:click={copyShareUrl}
+							class="relative cursor-pointer rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
+						>
+							Share Progress
+							{#if $showShareTooltip}
+								<div class="absolute left-1/2 -translate-x-1/2 -bottom-10 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-sm text-white">
+									Copied to clipboard!
+								</div>
+							{/if}
+						</button>
+					{/if}
 				</div>
 			</div>
 

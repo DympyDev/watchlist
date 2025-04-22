@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store';
 import { auth, db } from '$lib/firebase/firebase.config';
 import { GoogleAuthProvider, signInWithPopup, signOut, type User } from 'firebase/auth';
-import { doc, getDoc, setDoc, runTransaction } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 export const user = writable<User | null>(null);
 export const isAuthenticated = writable(false);
@@ -37,35 +37,15 @@ export async function saveWatchedItems(userId: string, universe: string, watched
 
     while (retryCount < MAX_RETRIES) {
         try {
-            const userDocRef = doc(db, 'users', userId);
+            const watchProgressRef = doc(db, 'users', userId, 'watchProgress', universe);
             
-            // First check if the document exists
-            const docSnap = await getDoc(userDocRef);
-            
-            if (!docSnap.exists()) {
-                // If document doesn't exist, create it with initial data
-                await setDoc(userDocRef, {
-                    [`${universe}_watched`]: watchedItems
-                });
-                return;
-            }
-
-            // If document exists, use transaction for atomic update
-            await runTransaction(db, async (transaction) => {
-                const userDoc = await transaction.get(userDocRef);
-                if (!userDoc.exists()) {
-                    throw new Error('Document does not exist!');
-                }
-                
-                // Only update the specific universe's watched items
-                transaction.update(userDocRef, {
-                    [`${universe}_watched`]: watchedItems
-                });
+            // Save the watched items
+            await setDoc(watchProgressRef, {
+                items: watchedItems,
+                updatedAt: new Date().toISOString()
             });
             
-            // If we get here, the operation was successful
             return;
-            
         } catch (error) {
             retryCount++;
             
@@ -83,15 +63,15 @@ export async function saveWatchedItems(userId: string, universe: string, watched
 
 export async function loadWatchedItems(userId: string, universe: string): Promise<string[]> {
     try {
-        const userDoc = doc(db, 'users', userId);
-        const docSnap = await getDoc(userDoc);
+        const watchProgressRef = doc(db, 'users', userId, 'watchProgress', universe);
+        const docSnap = await getDoc(watchProgressRef);
         
         if (docSnap.exists()) {
-            return docSnap.data()[`${universe}_watched`] || [];
+            return docSnap.data().items || [];
         }
         return [];
     } catch (error) {
         console.error('Error loading watched items:', error);
         throw error;
     }
-} 
+}
