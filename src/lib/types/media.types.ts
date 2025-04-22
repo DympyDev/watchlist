@@ -4,6 +4,10 @@ export interface MediaCollection {
   description: string;
   coverImage: string;
   sections: MediaSection[];
+  sources?: {
+    name: string;
+    url: string;
+  }[];
 }
 
 export interface MediaSection {

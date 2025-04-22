@@ -281,7 +281,28 @@
 				<p class="mx-auto max-w-2xl text-lg text-gray-600">
 					{data.description}
 				</p>
-				<div class="mt-4 space-x-4">
+				{#if data.sources && data.sources.length > 0}
+					<div class="mx-auto mt-4 max-w-2xl">
+						<p class="text-sm font-medium text-gray-700">Sources:</p>
+						<div class="mt-1 flex flex-wrap justify-center gap-3">
+							{#each data.sources as source}
+								<a
+									href={source.url}
+									target="_blank"
+									rel="noopener noreferrer"
+									class="inline-flex items-center rounded-full bg-white/90 px-3 py-1 text-sm text-gray-800 shadow-sm hover:bg-white hover:shadow-md transition-all"
+								>
+									{source.name}
+									<svg xmlns="http://www.w3.org/2000/svg" class="ml-1 h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+										<path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+										<path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+									</svg>
+								</a>
+							{/each}
+						</div>
+					</div>
+				{/if}
+				<div class="mt-8 space-x-4">
 					<button
 						on:click={scrollToNextUnwatched}
 						class="cursor-pointer rounded-lg bg-yellow-600 px-4 py-2 font-medium text-white transition-colors hover:bg-yellow-700"

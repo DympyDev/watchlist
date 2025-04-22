@@ -1,6 +1,5 @@
 import type { MediaSection } from "../types/media.types";
 
-// Based on: https://www.digitalspy.com/movies/a825774/marvel-cinematic-universe-in-chronological-order/#mcu-timeline-how-to-watch-the-mcu-in-chronological-order
 export const MCU_PHASES: MediaSection[] = [
   {
     name: "Avengers Assemble",
